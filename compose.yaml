@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: artofbalance
+      POSTGRES_USER: artofbalance
+      POSTGRES_PASSWORD: artofbalance
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U artofbalance -d artofbalance"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - artofbalance-postgres:/var/lib/postgresql/data
+
+  nex:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PN_ARTOFBALANCE_AUTH_PORT: ${PN_ARTOFBALANCE_AUTH_PORT:-26500}
+      PN_ARTOFBALANCE_SECURE_PORT: ${PN_ARTOFBALANCE_SECURE_PORT:-26501}
+      # The address a console is told to reach the secure server on. Override
+      # in .env or the shell; defaults to localhost for a LAN test.
+      PN_ARTOFBALANCE_SECURE_HOST: ${PN_ARTOFBALANCE_SECURE_HOST:-localhost}
+      PN_ARTOFBALANCE_POSTGRES_URI: postgres://artofbalance:artofbalance@postgres:5432/artofbalance?sslmode=disable
+      PN_ARTOFBALANCE_KERBEROS_PASSWORD: ${PN_ARTOFBALANCE_KERBEROS_PASSWORD:-change-me}
+      # Local preservation mode: accounts from settings.json, login token not
+      # validated. Flip to shared mode by setting PN_ARTOFBALANCE_LOCAL_MODE=0
+      # and providing the two NEX_* secrets (matching your account server).
+      PN_ARTOFBALANCE_LOCAL_MODE: ${PN_ARTOFBALANCE_LOCAL_MODE:-1}
+      PN_ARTOFBALANCE_SETTINGS_PATH: /home/go/app/settings.json
+      PN_ARTOFBALANCE_NEX_TOKEN_AES_KEY: ${PN_ARTOFBALANCE_NEX_TOKEN_AES_KEY:-}
+      PN_ARTOFBALANCE_NEX_PASSWORD_SECRET: ${PN_ARTOFBALANCE_NEX_PASSWORD_SECRET:-}
+    ports:
+      - "${PN_ARTOFBALANCE_AUTH_PORT:-26500}:${PN_ARTOFBALANCE_AUTH_PORT:-26500}/udp"
+      - "${PN_ARTOFBALANCE_SECURE_PORT:-26501}:${PN_ARTOFBALANCE_SECURE_PORT:-26501}/udp"
+    volumes:
+      - ./settings.json:/home/go/app/settings.json:ro
+
+volumes:
+  artofbalance-postgres:

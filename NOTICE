@@ -1,0 +1,25 @@
+This server is built on the Pretendo Network NEX stack:
+
+  - github.com/PretendoNetwork/nex-go
+  - github.com/PretendoNetwork/nex-protocols-go
+  - github.com/PretendoNetwork/nex-protocols-common-go
+  - github.com/PretendoNetwork/plogger-go
+
+all licensed under the GNU Affero General Public License v3.0.
+nex-protocols-common-go's Ranking package is used via the same vendored fork
+as hyrule-warriors-nex (internal/nex-protocols-common-go-patch/ranking,
+datastore subpackage dropped - Art of Balance links no DataStore): upstream
+v2.4.0 has no mode-aware ranking query (range/user/near/friend-range) and no
+PID-scoped GetCommonData, only a single flat
+GetRankingsAndCountByCategoryAndRankingOrderParam callback. Every other
+package (match-making, matchmake-extension, etc.) is the unmodified upstream
+release, which provisions its own matchmaking / tracking PostgreSQL schema
+(see docs/matchmaking-schema.md).
+
+The Art of Balance NEX configuration (game server ID 10135000 shared across
+regions, title IDs 0005000010135000 / 0005000010149400 / 000500001017cb00
+across USA/EUR/JPN, access key 96900116, NEX 3.7.1) started from static
+analysis of the game's own executable (this title has no kinnay.github.io or
+Pretendo Network entry) and was confirmed against a real Wii U console and
+packet captures - see RECON.md. No proprietary Nintendo or Shin'en code or
+assets are included.
